@@ -31,8 +31,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.Static("/static", "./static") //静态文件
-	router(r)                       // 注册api路由
+	router(r) // 注册api路由
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
