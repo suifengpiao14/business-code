@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/jinzhu/gorm"
@@ -31,6 +33,43 @@ func InitTable() {
 	db.AutoMigrate(model.BusinessCode{})
 }
 
+//GetPagination 获取分页
+func GetPagination(fun func(name string, defaultValue string) (value string)) (pagination *Pagination) {
+	sizeStr := fun("size", "10")
+	pageStr := fun("page", "1")
+	pagination = &Pagination{}
+	if size, err := strconv.ParseInt(sizeStr, 10, 64); err == nil {
+		pagination.Size = size
+	} else {
+		pagination.Size = 10
+	}
+	if page, err := strconv.ParseInt(pageStr, 10, 64); err == nil {
+		pagination.Page = page
+	} else {
+		pagination.Page = 1
+	}
+	pagination.Limit = pagination.Size
+	pagination.Offset = (pagination.Page - 1) * pagination.Limit
+
+	return
+}
+
+//GetByID 通过id获取记录
+func GetByID(out interface{}, id interface{}) *gorm.DB {
+	db := GetDb()
+	return db.Where("id=?", id).Last(out)
+}
+
+//OrderCondition 排序条件
+func OrderCondition(orderStr string) (order string) {
+	//todo  需要完善sql注入
+	order = strings.Trim(orderStr, ",")
+	order = fmt.Sprintf("%s,%s", order, "update_time desc")
+	order = strings.Trim(order, ",")
+	return
+}
+
+//WhereCondition 获取where查询
 func WhereCondition(queryModel interface{}, fun func(name string) (value string, exists bool)) (query string, arguments []interface{}) {
 	whereArr := []string{"1=1"}
 	arguments = make([]interface{}, 0)
@@ -42,7 +81,7 @@ func WhereCondition(queryModel interface{}, fun func(name string) (value string,
 			continue
 		}
 		value, exists := fun(jsonName)
-		if exists {
+		if exists && value != "" { // 空字符串不处理
 			placeholder, ok := model.BusinessCodeWhereMap[jsonName]
 			if !ok {
 				continue
@@ -60,7 +99,6 @@ func WhereCondition(queryModel interface{}, fun func(name string) (value string,
 		}
 	}
 	query = strings.Join(whereArr, " ")
-
 	return
 
 }
