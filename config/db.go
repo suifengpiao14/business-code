@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path"
 	"reflect"
 	"strconv"
 	"strings"
@@ -16,7 +18,10 @@ func GetDb() (db *gorm.DB) {
 	if db != nil {
 		return
 	}
-	db, err := gorm.Open("sqlite3", "./data/businessCode.db")
+	dbFile := "./data/businessCode.db"
+	datebase := path.Dir(dbFile)
+	os.MkdirAll(datebase, os.ModePerm)
+	db, err := gorm.Open("sqlite3", dbFile)
 	db.LogMode(true)
 	if err != nil {
 		panic(err)
