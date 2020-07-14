@@ -1,0 +1,18 @@
+version: "3.2"
+services:
+  business-code:
+          #build: .
+    image: ${DOCKER_REGISTRY}business-code
+    restart: always
+    container_name: business-code
+    hostname: business-code.service
+    ports:
+      # api
+      - "8095:8095"
+      # web
+      - "8096:8096"
+    networks:
+      - docker_public
+networks:
+  docker_public:
+    external: true
